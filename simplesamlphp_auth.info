@@ -1,13 +1,11 @@
-; $Id: simplesamlphp_auth.info 35 2011-02-22 17:53:47Z smoitozo@gmail.com $
+; $Id: simplesamlphp_auth.info 24 2011-02-22 14:03:34Z smoitozo $
 name = "simpleSAMLphp authentication"
-description = "Allows users to authenticate to a remote SAML identity provider (IdP) via a locally configured SimpleSAMLphp service point (SP)."
+description = "Allows users to authenticate to a shibboleth or SAML 2.0 IdP."
 php = 5.1
-core = 7.x
-files[] = simplesamlphp_auth.module
-configure = admin/config/people/simplesamlphp_auth
+core = 6.x
 
 ; Information added by drupal.org packaging script
-version = "7.x-1.0"
-core = "7.x"
+version = "6.x-2.3"
+core = "6.x"
 project = "simplesamlphp_auth"
-datestamp = "1298392000"
+datestamp = "1298383303"
