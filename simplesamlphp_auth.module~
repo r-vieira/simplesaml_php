@@ -491,7 +491,7 @@ function _simplesamlphp_auth_get_authname() {
 
     $authname = '';
 
-    /* Check if valid local session exists.. */
+    // Check if valid local session exists..
     if (isset($_simplesamlphp_auth_saml_attributes)) {
       _simplesaml_auth_debug('_simplesamlphp_auth_get_authname: Valid local session exist');
       if (isset($_simplesamlphp_auth_saml_attributes[variable_get('simplesamlphp_auth_unique_id', 'eduPersonPrincipalName')])) {
@@ -598,7 +598,7 @@ function _simplesamlphp_auth_rolepopulation($rolemap) {
 
   _simplesaml_auth_debug('Rolemap: ' . $rolemap);
 
-  /* Check if valid local session exists.. */
+  // Check if valid local session exists..
   if ($_simplesamlphp_auth_as->isAuthenticated()) {
     $attributes = $_simplesamlphp_auth_saml_attributes;
 
