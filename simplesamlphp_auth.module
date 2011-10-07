@@ -81,9 +81,9 @@ function simplesamlphp_auth_loginpage() {
   $_simplesamlphp_auth_saml_config = SimpleSAML_Configuration::getInstance();
   $configStoreType = $_simplesamlphp_auth_saml_config->getValue('store.type');
 
-  // Make sure memcache is being used.
-  if ($configStoreType != 'memcache') {
-    watchdog('simplesamlphp_auth', t('A user attempted to login using this module but the store.type is not set to memcache.'), NULL, WATCHDOG_WARNING);
+  // Make sure phpsession is NOT being used.
+  if ($configStoreType == 'phpsession') {
+    watchdog('simplesamlphp_auth', t('A user attempted to login using simplesamlphp but the store.type is phpsession, use memcache or sql for simplesamlphp session storage. See: simplesamlphp/config/config.php.'), NULL, WATCHDOG_WARNING);
     $fail = TRUE;
   }
 
@@ -208,7 +208,7 @@ function simplesamlphp_auth_init() {
           if (variable_get('simplesamlphp_auth_roleevaleverytime', 0)) {
 
             // If the user is already registered, update the roles and populate roles based on configuration setting.
-            _simplesaml_auth_debug(t('User already registered [%authname] updating roles.',, array('%authname' => $authname)));
+            _simplesaml_auth_debug(t('User already registered [%authname] updating roles.', array('%authname' => $authname)));
             $roles = _simplesamlphp_auth_rolepopulation(variable_get('simplesamlphp_auth_rolepopulation', ''));
             $userinfo = array('roles' => $roles);
             $user = user_save($user, $userinfo);
