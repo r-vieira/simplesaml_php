@@ -70,7 +70,7 @@ function simplesamlphp_auth_perm() {
  * Represents the Drupal page (saml_login), which triggers user authentication against the SimpleSAMLphp service provider.
  */
 function simplesamlphp_auth_loginpage() {
-  global $user;
+  global $user, $base_root;
   global $_simplesamlphp_auth_as;
   global $_simplesamlphp_auth_saml_attributes;
 
@@ -81,6 +81,11 @@ function simplesamlphp_auth_loginpage() {
     // Exit without initializing.
     drupal_set_message(t('We\'re sorry this feature is not yet enabled.'));
     return;
+  }
+
+  // Are we forcing https?
+  if(variable_get('simplesamlphp_auth_forcehttps', NULL) && 'on' != $_SERVER['HTTPS']) {
+    drupal_goto(_simplesamlphp_auth_forcehttps_rewrite($base_root . $_SERVER['REQUEST_URI']));
   }
 
   // Do some sanity checking before attempting anything.
@@ -135,7 +140,7 @@ function simplesamlphp_auth_init() {
   global $_simplesamlphp_auth_saml_config;
   global $_simplesamlphp_auth_saml_version;
 
-  if (!_simplesamlphp_auth_isEnabled()) {
+  if (!_simplesamlphp_auth_isEnabled(TRUE)) {
     // Exit without initializing.
     return;
   }
@@ -476,18 +481,30 @@ function simplesamlphp_auth_settings() {
  * Implementation of hook_form_alter().
  */
 function simplesamlphp_auth_form_alter(&$form, $form_state, $form_id) {
-    if ($form_id == 'user_login_block') {
-      $link =  l('Federated Login', 'saml_login');
-      $links = $form['links']['#value'];
-      $links = str_replace('</ul>', '<li class="saml">' . $link  . '</li></ul>', $links);
-      $form['links']['#value'] = $links;
-    }
+
+  if (!_simplesamlphp_auth_isEnabled()) {
+    // Exit without executing.
+    return;
+  }
+
+  if ($form_id == 'user_login_block') {
+    $link =  l('Federated Login', 'saml_login');
+    $links = $form['links']['#value'];
+    $links = str_replace('</ul>', '<li class="saml">' . $link  . '</li></ul>', $links);
+    $form['links']['#value'] = $links;
+  }
 }
 
 /**
  * Implementation of hook_block().
  */
 function simplesamlphp_auth_block($op = 'list', $delta = 0, $edit = array()) {
+
+  if (!_simplesamlphp_auth_isEnabled()) {
+    // Exit without executing.
+    return;
+  }
+
   if ($op == 'list') {
     $blocks = array(
       array(
@@ -520,10 +537,13 @@ function simplesamlphp_auth_block($op = 'list', $delta = 0, $edit = array()) {
 /**
  * Checks to see if authentication via SimpleSAMLphp should be activated
  *
+ * @param bShowInactiveMsg
+ *   Whether to display the "module not activated" message
+ *
  * @return
  *   TRUE/FALSE
  */
-function _simplesamlphp_auth_isEnabled() {
+function _simplesamlphp_auth_isEnabled($bShowInactiveMsg=FALSE) {
   GLOBAL $user;
 
   $failure = NULL;
@@ -536,10 +556,6 @@ function _simplesamlphp_auth_isEnabled() {
 
     watchdog('simplesamlphp_auth', $failure, NULL, WATCHDOG_WARNING);
 
-    if ($user->uid != 0) {
-      drupal_set_message($failure);
-    }
-
   }
   else {
 
@@ -548,10 +564,6 @@ function _simplesamlphp_auth_isEnabled() {
       $failure = t('SimpleSAMLphp could not be found at %basedir . The simplesamlphp_auth module cannot function until the path to the local SimpleSAMLphp instance is configured.', array('%basedir' => $basedir));
 
       watchdog('simplesamlphp_auth', $failure, NULL, WATCHDOG_WARNING);
-
-      if ($user->uid != 0) {
-        drupal_set_message($failure);
-      }
     }
 
 
@@ -560,6 +572,13 @@ function _simplesamlphp_auth_isEnabled() {
   // If there were no failures, then it should be activated
   if (!$failure) {
     return TRUE;
+  }
+  else {
+
+    // communicate but don't be too annoying
+    if ( $bShowInactiveMsg && user_access('access administration pages') && ( preg_match('/\/admin\/user/', $_SERVER['REQUEST_URI']) || preg_match('/\/admin\/build\/modules/', $_SERVER['REQUEST_URI']) ) ) {
+        drupal_set_message($failure);
+    }
   }
 
   return FALSE;
@@ -669,6 +688,11 @@ function _simplesamlphp_auth_generate_block_text() {
   global $_simplesamlphp_auth_as;
   $block_content = '';
   global $user;
+
+  if (!_simplesamlphp_auth_isEnabled()) {
+    // Exit without executing.
+    return;
+  }
 
   // Check if valid local session exists.
   if ($_simplesamlphp_auth_as->isAuthenticated()) {

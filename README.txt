@@ -5,15 +5,21 @@ The simplesamlphp_auth module makes it possible for Drupal to support SAML for a
 
 -- PREREQUISITES --
 
-1) You must have SimpleSAMLphp installed and configured as a working service point (SP) as the module uses your local SimpleSAMLphp SP for the SAML support.
+1) You must have SimpleSAMLphp installed and configured as a working service
+   point (SP) as the module uses your local SimpleSAMLphp SP for the SAML
+   support. For more information on installing and configuring SimpleSAMLphp as
+   an SP visit: http://www.simplesamlphp.org.
 
-	For more information on installing and configuring SimpleSAMLphp as an SP visit: http://www.simplesamlphp.org
-	
-	IMPORTANT: Your SP must be configured to use memcache for session storage (in config/config.php set store.type => 'memcache')
+   IMPORTANT: Your SP must be configured to use something other than phpsession
+   for session storage (in config/config.php set store.type => 'memcache' or 'sql').
 
-2) You must have memcached installed on your server and PHP must have the memcache extension.
+   To use memcache session handling you must have memcached installed on your
+   server and PHP must have the memcache extension. For more information on
+   installing the memcache extension for PHP visit:
+   http://www.php.net/manual/en/memcache.installation.php
 
-	For more information on installing the memcache extension for PHP visit: http://www.php.net/manual/en/memcache.installation.php
+   If you are on a shared host or a machine that you cannot install memcache on
+   then consider using the sql handler (store.type => 'sql').
 
 
 -- INSTALLATION --
