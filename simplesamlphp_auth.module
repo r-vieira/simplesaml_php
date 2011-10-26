@@ -84,8 +84,8 @@ function simplesamlphp_auth_loginpage() {
   }
 
   // Are we forcing https?
-  if(variable_get('simplesamlphp_auth_forcehttps', NULL) && 'on' != $_SERVER['HTTPS']) {
-    drupal_goto(_simplesamlphp_auth_forcehttps_rewrite($base_root . $_SERVER['REQUEST_URI']));
+  if (variable_get('simplesamlphp_auth_forcehttps', NULL) && 'on' != $_SERVER['HTTPS']) {
+    drupal_goto(_simplesamlphp_auth_forcehttps_rewrite($base_root . request_uri()));
   }
 
   // Do some sanity checking before attempting anything.
@@ -150,7 +150,7 @@ function simplesamlphp_auth_init() {
 
   // Make sure we know where SimpleSAMLphp is.
   if (!file_exists($basedir)) {
-    $failure = t('SimpleSAMLphp could not be found at %basedir . The simplesamlphp_auth module cannot function until the path to the local SimpleSAMLphp instance is configured.',array('%basedir' => $basedir));
+    $failure = t('SimpleSAMLphp could not be found at %basedir . The simplesamlphp_auth module cannot function until the path to the local SimpleSAMLphp instance is configured.', array('%basedir' => $basedir));
 
     watchdog('simplesamlphp_auth', $failure, NULL, WATCHDOG_WARNING);
 
@@ -576,7 +576,7 @@ function _simplesamlphp_auth_isEnabled($bShowInactiveMsg=FALSE) {
   else {
 
     // communicate but don't be too annoying
-    if ( $bShowInactiveMsg && user_access('access administration pages') && ( preg_match('/\/admin\/user/', $_SERVER['REQUEST_URI']) || preg_match('/\/admin\/build\/modules/', $_SERVER['REQUEST_URI']) ) ) {
+    if ( $bShowInactiveMsg && user_access('access administration pages') && ( preg_match('/\/admin\/user/', request_uri()) || preg_match('/\/admin\/build\/modules/', request_uri()) ) ) {
         drupal_set_message($failure);
     }
   }
