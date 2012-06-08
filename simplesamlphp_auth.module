@@ -347,14 +347,8 @@ function simplesamlphp_auth_user($op, &$edit, &$account, $category = NULL) {
     if (!empty($_simplesamlphp_auth_saml_attributes)) {
 
       $config = SimpleSAML_Configuration::getInstance();
-      $msg = 'with_slo';
 
-      try {
-        $slo = $config->getString('SingleLogoutService');
-      } catch (Exception $e) {
-        $msg = "no_slo";
-      }
-      $_simplesamlphp_auth_as->logout('/?msg=' . $msg);
+      $_simplesamlphp_auth_as->logout(base_path());
 
     }
 
