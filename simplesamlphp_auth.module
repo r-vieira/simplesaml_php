@@ -242,7 +242,7 @@ function simplesamlphp_auth_init() {
               // We let the user know about this and redirect to the user/login page.
               $msg = t('We are sorry. While you have successfully authenticated, you are not yet entitled to access this site.
               Please ask the site administrator to provision access for you.');
-              drupal_set_message(t($msg));
+              drupal_set_message($msg);
               $_simplesamlphp_auth_as->logout('/?msg=' . $msg);
           }
 
@@ -347,7 +347,7 @@ function simplesamlphp_auth_user($op, &$edit, &$account, $category = NULL) {
           _simplesaml_auth_debug(t('Registering user [%acctname]', array('%acctname' => $account->name)));
           $account->name = _simplesamlphp_auth_get_default_name($account->uid);
       } catch (Exception $e) {
-          $message = t('Username is missing.' . $e->getMessage());
+          $message = t('Username is missing.' . check_plain($e->getMessage()));
           drupal_set_message(t($message), "error");
           watchdog('simplesamlphp', $message, WATCHDOG_CRITICAL);
       }
@@ -360,7 +360,7 @@ function simplesamlphp_auth_user($op, &$edit, &$account, $category = NULL) {
       try {
           $mail_address = _simplesamlphp_auth_get_mail();
       } catch (Exception $e)  {
-          $message = t('Email is missing.' . $e->getMessage());
+          $message = t('Email is missing.' . check_plain($e->getMessage()));
           drupal_set_message(t($message), "error");
           watchdog('simplesamlphp', $message, WATCHDOG_CRITICAL);
       }
@@ -577,7 +577,7 @@ function _simplesamlphp_auth_isEnabled($bShowInactiveMsg=FALSE) {
 
   if (!$isActivated) {
     $menuPaths = array_keys(simplesamlphp_auth_menu());
-    $failure = t('SimpleSAMLphp authentication is NOT yet activated. It can be activated on the ' . l('configuration page', $menuPaths[0]) . '.');
+    $failure = t('SimpleSAMLphp authentication is NOT yet activated. It can be activated on the ' . l(t('configuration page'), $menuPaths[0]) . '.');
 
     watchdog('simplesamlphp_auth', $failure, NULL, WATCHDOG_WARNING);
 
