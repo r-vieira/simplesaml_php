@@ -107,7 +107,7 @@ function simplesamlphp_auth_loginpage() {
   // There was a problem, we can't go on, but we don't want to tell the user any specifics either.
   if ($fail) {
     drupal_set_message(t('We\'re sorry. There was a problem. The issue has been logged for the administrator.'));
-    drupal_goto('/');
+    drupal_goto(base_path());
 
   }
 
@@ -259,7 +259,7 @@ function simplesamlphp_auth_init() {
               $msg = t('We are sorry. While you have successfully authenticated, you are not yet entitled to access this site.
               Please ask the site administrator to provision access for you.');
               drupal_set_message($msg);
-              $_simplesamlphp_auth_as->logout('/?msg=' . $msg);
+              $_simplesamlphp_auth_as->logout(base_url());
           }
 
 
