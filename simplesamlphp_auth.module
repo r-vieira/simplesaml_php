@@ -347,13 +347,68 @@ function simplesamlphp_auth_init() {
 
 
 /**
+ * Checks if an account has an external authentication module configured. Table 'authmap'.
+ *
+ * @param $uid
+ *   Drupal account user id
+ *
+ * @param $authname
+ *   Drupal account user name
+ *
+ * @return
+ *   TRUE/FALSE
+ */
+function _simplesaml_auth_authamp_contains($uid, $authname){
+  $result = db_query("SELECT uid from {authmap} WHERE uid='%s' AND authname='%s' and module='simplesamlphp_auth'",
+    $uid,
+    $authname);
+
+  return ($result->num_rows > 0);
+}
+
+/**
  * Implementation of hook_user().
  */
 function simplesamlphp_auth_user($op, &$edit, &$account, $category = NULL) {
-    global $_simplesamlphp_auth_as;
-    global $_simplesamlphp_auth_saml_attributes;
 
-  if ($op == 'insert' && $category = 'account') {
+
+  global $_simplesamlphp_auth_as;
+  global $_simplesamlphp_auth_saml_attributes;
+
+
+  if ($op == 'after_update') {
+    if (array_key_exists('simplesaml_enabled', $account)){
+      $uid      = $account->uid;
+      $authname = $account->name;
+      $simplesaml_enabled = $account->simplesaml_enabled == 0 ? FALSE : TRUE;
+
+      if ($simplesaml_enabled) {
+
+        $record = array();
+        $record['uid'] = $uid;
+        $record['authname'] = $authname;
+        $record['module'] = 'simplesamlphp_auth';
+
+        if (!_simplesaml_auth_authamp_contains($uid, $name)){
+          $result = drupal_write_record('authmap', $record);
+        } else {
+          _simplesaml_auth_debug('Authmap already has entry for this uid and name');
+        }
+
+      } else {
+        db_query("DELETE FROM {authmap} WHERE uid = '%s' AND authname = '%s' AND module = 'simplesamlphp_auth'", $uid, $authname);
+      }
+    }
+    
+  } 
+  else   if ($op == 'insert' && $category = 'account') {
+
+    if (!array_key_exists('authname_simplesamlphp_auth', $edit)) {
+      _simplesaml_auth_debug('Creating a Regular Drupal Account. Bail out on simplesamlphp_auth_user_insert');
+      return;
+    }
+
+
     // If user registration has a valid session.
 
     if ($_simplesamlphp_auth_as->isAuthenticated()) {
@@ -540,13 +595,59 @@ function simplesamlphp_auth_form_alter(&$form, $form_state, $form_id) {
     return;
   }
 
-  if ($form_id == 'user_login_block') {
-    $link =  l('Federated Login', 'saml_login');
-    $links = $form['links']['#value'];
-    $links = str_replace('</ul>', '<li class="saml">' . $link  . '</li></ul>', $links);
-    $form['links']['#value'] = $links;
+  switch($form_id){
+
+    case 'user_login_block':
+      $link =  l('Federated Login', 'saml_login');
+      $links = $form['links']['#value'];
+      $links = str_replace('</ul>', '<li class="saml">' . $link  . '</li></ul>', $links);
+      $form['links']['#value'] = $links;
+    break;
+
+    // Read the simplesaml_enabled flag for the selected user.
+    case 'user_profile_form':
+      // check for the correct permission
+      if (user_access('administer users')) {
+
+        // fetch the uid and name for the account
+        $account = $form['_account']['#value'];
+        $uid = $account->uid;
+        $name = $account->name;
+
+        // check if the account already has authmap setup 
+        $simplesaml_enabled = _simplesaml_auth_authamp_contains($uid, $name);
+
+        // update the form to reflect the authmap
+        $form['account']['simplesaml_enabled'] = array(
+          "#type"          => "checkbox",
+          "#title"         => "Enable SimpleSAML Authentication",
+          "#default_value" => $simplesaml_enabled,
+          "#description"   => "Enables this account to authenticate via SimpleSAML.",
+          "#required"      => FALSE
+        );
+      }
+    break;
+
+    // Add a flag to enable simplesaml auth for the selected user. Default == TRUE
+    case 'user_register':
+    // check for the correct permission
+      if (user_access('administer users')) {
+
+        // update the form to reflect the authmap
+        $form['account']['simplesaml_enabled'] = array(
+            "#type"          => "checkbox",
+            "#title"         => "Enable SimpleSAML Authentication",
+            "#default_value" => TRUE,
+            "#description"   => "Enables this account to authenticate via SimpleSAML.",
+            "#required"      => FALSE
+          );
+      }
+    break;
+
   }
+
 }
+
 
 /**
  * Implementation of hook_block().
