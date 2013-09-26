@@ -365,10 +365,8 @@ function simplesamlphp_auth_init() {
  */
 function _simplesaml_auth_authamp_contains($uid, $authname){
   $result = db_query("SELECT uid from {authmap} WHERE uid='%s' AND authname='%s' and module='simplesamlphp_auth'",
-    $uid,
-    $authname);
-
-  return ($result->num_rows > 0);
+    array($uid, $authname));
+  return ($result->rowCount() > 0);
 }
 
 /**
@@ -456,7 +454,7 @@ function simplesamlphp_auth_user_update(&$edit, $account, $category) {
       }
 
     } else {
-      db_query("DELETE FROM {authmap} WHERE uid = '%s' AND authname = '%s' AND module = 'simplesamlphp_auth'", $uid, $authname);
+      db_query("DELETE FROM {authmap} WHERE uid = '%s' AND authname = '%s' AND module = 'simplesamlphp_auth'", array($uid, $authname));
     }
   }
 }
@@ -660,7 +658,7 @@ function simplesamlphp_auth_form_alter(&$form, $form_state, $form_id) {
       if (user_access('administer users')) {
 
         // fetch the uid and name for the account
-        $account = $form['_account']['#value'];
+        $account = $form['#user'];
         $uid = $account->uid;
         $name = $account->name;
 
